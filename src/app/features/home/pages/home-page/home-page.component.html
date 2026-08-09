@@ -1,59 +1,101 @@
 <div class="home-container">
-  <main class="home-main">
-    <!-- Toolbar (20px from top) -->
-    <div class="toolbar-wrapper">
-      <div class="toolbar">        
-        <!-- Autocomplete Search -->
-        <div class="search-container">
-          <input 
-            type="text"
-            class="search-input"
-            placeholder="Buscar por código, ej: 000631"
-            [formControl]="searchControl"
-            aria-label="Buscar establecimientos sanitarios">
-          
-          <!-- Autocomplete dropdown -->
-          @if ((filteredPlaces$ | async)?.length) {
-            <div class="autocomplete-dropdown">
+  <mat-sidenav-container class="sidenav-container">
+    
+    <!-- Sidenav with Filters -->
+    <mat-sidenav #sidenav class="sidenav" [mode]="sidenavMode" [opened]="sidenavOpen" (openedChange)="sidenavOpen = $event">
+      <div class="sidenav-header">
+        <h2>Filtros</h2>
+        <button mat-icon-button (click)="sidenav.close()" class="close-btn">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="sidenav-content">
+        <!-- Search Autocomplete -->
+        <div class="filter-group">
+          <mat-form-field class="full-width">
+            <mat-label>Buscar por código</mat-label>
+            <input 
+              type="text"
+              matInput
+              placeholder="ej: 001664"
+              [formControl]="searchControl"
+              [matAutocomplete]="auto"
+              aria-label="Buscar establecimientos sanitarios">
+            <mat-autocomplete #auto="matAutocomplete">
               @for (place of filteredPlaces$ | async; track place.code) {
-                <div 
-                  class="autocomplete-item"
-                  (click)="onPlaceSelected(place)">
-                  <div class="item-content">
-                    <div class="item-header">
+                <mat-option [value]="place" (onSelectionChange)="onPlaceSelected(place)">
+                  <div class="autocomplete-mat-option">
+                    <div class="option-header">
                       <span class="place-code">{{ place.code }}</span>
-                      <span class="place-name">{{ place.name }}</span>
                     </div>
-                    <div class="item-details">
+                    <div class="option-body">
+                      <span class="place-name">{{ place.name }}</span>
                       <span class="place-carrera">{{ place.specialization }}</span>
                     </div>
                   </div>
-                </div>
+                </mat-option>
               }
+            </mat-autocomplete>
+          </mat-form-field>
+        </div>
+
+        <!-- Specialization Filter -->
+        <div class="filter-group">
+          <mat-form-field class="full-width">
+            <mat-label>Filtrar por Carrera</mat-label>
+            <mat-select [formControl]="specializationControl" multiple>
+              @for (specialization of specializationList; track specialization) {
+                <mat-option [value]="specialization">{{ specialization }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <!-- Province Filter -->
+        <div class="filter-group">
+          <mat-form-field class="full-width">
+            <mat-label>Filtrar por Provincia</mat-label>
+            <mat-select [formControl]="provinceControl" multiple>
+              @for (province of provinceList; track province) {
+                <mat-option [value]="province">{{ province }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </div>
+    </mat-sidenav>
+
+    <!-- Main Content -->
+    <mat-sidenav-content class="sidenav-content-main">
+      <div class="content-header">
+        <!-- Menu Button -->
+        <button 
+          mat-icon-button 
+          class="menu-button" 
+          (click)="sidenav.toggle()"
+          aria-label="Abrir menú de filtros">
+          <mat-icon>menu</mat-icon>
+        </button>
+      </div>
+
+      <!-- Map Container -->
+      <div class="map-wrapper">
+        <div class="maps-container">
+          <div #mapContainer class="map-container"></div>
+          
+          <!-- Street View Container -->
+          @if (streetViewActive) {
+            <div class="streetview-container">
+              <button class="close-streetview" (click)="closeStreetView()">✕</button>
+              <div #streetViewContainer class="streetview-viewer"></div>
             </div>
           }
         </div>
-
-        <span class="toolbar-spacer"></span>
-        <span class="toolbar-info">Ecuador</span>
       </div>
-    </div>
+    </mat-sidenav-content>
 
-    <!-- Map Container -->
-    <div class="map-wrapper">
-      <div class="maps-container">
-        <div #mapContainer class="map-container"></div>
-        
-        <!-- Street View Container -->
-        @if (streetViewActive) {
-          <div class="streetview-container">
-            <button class="close-streetview" (click)="closeStreetView()">✕</button>
-            <div #streetViewContainer class="streetview-viewer"></div>
-          </div>
-        }
-      </div>
-    </div>
-  </main>
+  </mat-sidenav-container>
 
   <footer class="home-footer">
     <p class="footer-text">&copy; 2026 Rural. All rights reserved.</p>

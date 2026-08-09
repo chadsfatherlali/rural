@@ -3,7 +3,6 @@
   <head>
     <meta charset="utf-8" />
     <title>Rural</title>
-    <base href="/rural/">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -16,23 +15,5 @@
   </head>
   <body>
     <app-root></app-root>
-
-    <!-- Google Maps API -->
-    <!-- Replace YOUR_API_KEY with your actual Google Maps API key -->
-    <script>
-      window.googleMapsReady = false;
-
-      window.initGoogleMaps = function () {
-        window.googleMapsReady = true;
-        console.log('📍 Google Maps API loaded');
-        document.dispatchEvent(new Event('googleMapsLoaded'));
-      };
-    </script>
-
-    <script
-      async
-      defer
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC6sI2YdD4iodtMuSFbYMO7vkuN9gbTWic&callback=initGoogleMaps"
-    ></script>
   </body>
 </html>
