@@ -1,0 +1,61 @@
+<div class="home-container">
+  <main class="home-main">
+    <!-- Toolbar (20px from top) -->
+    <div class="toolbar-wrapper">
+      <div class="toolbar">        
+        <!-- Autocomplete Search -->
+        <div class="search-container">
+          <input 
+            type="text"
+            class="search-input"
+            placeholder="Buscar por código, ej: 000631"
+            [formControl]="searchControl"
+            aria-label="Buscar establecimientos sanitarios">
+          
+          <!-- Autocomplete dropdown -->
+          @if ((filteredPlaces$ | async)?.length) {
+            <div class="autocomplete-dropdown">
+              @for (place of filteredPlaces$ | async; track place.code) {
+                <div 
+                  class="autocomplete-item"
+                  (click)="onPlaceSelected(place)">
+                  <div class="item-content">
+                    <div class="item-header">
+                      <span class="place-code">{{ place.code }}</span>
+                      <span class="place-name">{{ place.name }}</span>
+                    </div>
+                    <div class="item-details">
+                      <span class="place-carrera">{{ place.specialization }}</span>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <span class="toolbar-spacer"></span>
+        <span class="toolbar-info">Ecuador</span>
+      </div>
+    </div>
+
+    <!-- Map Container -->
+    <div class="map-wrapper">
+      <div class="maps-container">
+        <div #mapContainer class="map-container"></div>
+        
+        <!-- Street View Container -->
+        @if (streetViewActive) {
+          <div class="streetview-container">
+            <button class="close-streetview" (click)="closeStreetView()">✕</button>
+            <div #streetViewContainer class="streetview-viewer"></div>
+          </div>
+        }
+      </div>
+    </div>
+  </main>
+
+  <footer class="home-footer">
+    <p class="footer-text">&copy; 2026 Rural. All rights reserved.</p>
+  </footer>
+</div>

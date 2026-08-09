@@ -1,0 +1,385 @@
+:host {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+}
+
+.home-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: #f5f7fa;
+}
+
+/* Main Content with Map */
+.home-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 20px;
+  position: relative;
+}
+
+/* Toolbar Wrapper */
+.toolbar-wrapper {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  z-index: 20;
+}
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  height: 56px;
+  padding: 0 16px;
+}
+
+.toolbar-title {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #333;
+  white-space: nowrap;
+}
+
+/* Search Container */
+.search-container {
+  flex: 1;
+  max-width: 350px;
+  position: relative;
+}
+
+.search-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.1);
+}
+
+.search-input::placeholder {
+  color: #999;
+}
+
+/* Autocomplete Dropdown */
+.autocomplete-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+.autocomplete-item {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s ease;
+}
+
+.autocomplete-item:hover {
+  background-color: #fef2f2;
+}
+
+.autocomplete-item:last-child {
+  border-bottom: none;
+}
+
+.item-content {
+  width: 100%;
+}
+
+.item-header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.place-code {
+  font-weight: 600;
+  color: #ef4444;
+  font-family: 'Courier New', monospace;
+  min-width: 70px;
+  font-size: 0.85rem;
+}
+
+.place-name {
+  color: #333;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
+.item-details {
+  display: flex;
+  align-items: center;
+}
+
+.place-carrera {
+  color: #666;
+  font-size: 0.8rem;
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toolbar-spacer {
+  flex: 1 1 auto;
+}
+
+.toolbar-info {
+  font-size: 0.9rem;
+  color: #666;
+  padding-left: 16px;
+  border-left: 1px solid #e0e0e0;
+  white-space: nowrap;
+}
+
+/* Map Wrapper */
+.map-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  margin-top: 76px;
+}
+
+.maps-container {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+}
+
+.map-container {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Street View Container */
+.streetview-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #f0f0f0;
+  z-index: 100;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.streetview-viewer {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.close-streetview {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 110;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: #333;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.close-streetview:hover {
+  background: #f5f5f5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.close-streetview:active {
+  transform: scale(0.95);
+}
+
+/* Footer */
+.home-footer {
+  background: rgba(0, 0, 0, 0.05);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.footer-text {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .home-main {
+    padding: 12px;
+  }
+
+  .toolbar-wrapper {
+    top: 12px;
+    left: 12px;
+    right: 12px;
+  }
+
+  .toolbar {
+    height: 48px;
+    padding: 0 12px;
+    flex-wrap: wrap;
+  }
+
+  .search-container {
+    flex: 1;
+    max-width: none;
+    min-width: 150px;
+    width: 100%;
+  }
+
+  .toolbar-info {
+    font-size: 0.8rem;
+    flex: 0;
+  }
+
+  .map-wrapper {
+    margin-top: 100px;
+  }
+
+  .map-legend {
+    bottom: 12px;
+    right: 12px;
+    min-width: 200px;
+    padding: 12px 15px;
+  }
+
+  .legend-title {
+    font-size: 0.9rem;
+  }
+
+  .legend-text {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-main {
+    padding: 8px;
+  }
+
+  .toolbar-wrapper {
+    top: 8px;
+    left: 8px;
+    right: 8px;
+  }
+
+  .toolbar {
+    height: auto;
+    padding: 8px;
+    flex-wrap: wrap;
+  }
+
+  .toolbar-title {
+    font-size: 0.85rem;
+    flex: 0 0 100%;
+    margin-bottom: 8px;
+  }
+
+  .search-container {
+    flex: auto;
+    max-width: none;
+    width: 100%;
+    min-width: auto;
+  }
+
+  .toolbar-info {
+    font-size: 0.7rem;
+    display: none;
+  }
+
+  .map-wrapper {
+    margin-top: 110px;
+  }
+
+  .map-legend {
+    bottom: 8px;
+    right: 8px;
+    min-width: 160px;
+    padding: 10px 12px;
+  }
+
+  .legend-title {
+    font-size: 0.8rem;
+    margin-bottom: 5px;
+  }
+
+  .legend-text {
+    font-size: 0.7rem;
+  }
+
+  .footer-text {
+    font-size: 0.75rem;
+  }
+
+  .place-code {
+    min-width: 50px;
+    font-size: 0.8rem;
+  }
+
+  .place-name {
+    font-size: 0.8rem;
+  }
+}
+
+/* Google Maps custom styling */
+::ng-deep .gm-control-active {
+  transform: scale(0.8);
+}
+
+::ng-deep .gm-fullscreen-control {
+  margin-right: 10px;
+  margin-bottom: 10px;
+}

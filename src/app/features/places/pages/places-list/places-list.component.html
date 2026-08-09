@@ -1,0 +1,115 @@
+<div class="w-full p-6 bg-surface-50 rounded-lg">
+
+  <!-- Group 1: Header -->
+  <div class="mb-8">
+    <h1 class="text-4xl font-bold mb-2 text-text-color">Healthcare Places</h1>
+    <p class="text-lg text-muted-color">MSP health facilities with available positions</p>
+  </div>
+
+  <!-- Group 2: Search and filter controls -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+
+    <!-- Search input -->
+    <div>
+      <label class="block text-sm font-semibold mb-3 text-text-color">Search</label>
+      <input
+        type="text"
+        [formControl]="searchControl"
+        placeholder="Name, province, canton..."
+        class="w-full px-4 py-2 border border-surface-300 rounded-lg bg-surface-0 text-text-color"
+      />
+    </div>
+
+    <!-- Type filter -->
+    <div>
+      <label class="block text-sm font-semibold mb-3 text-text-color">Type</label>
+      <select
+        [formControl]="filterType"
+        class="w-full px-4 py-2 border border-surface-300 rounded-lg bg-surface-0 text-text-color"
+      >
+        <option value="">All types</option>
+        @for (type of typesAvailable; track type) {
+          <option [value]="type">{{ type }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="flex items-end gap-3">
+      <button
+        (click)="refresh()"
+        class="flex-1 px-4 py-2 bg-primary-500 text-white rounded-lg font-semibold hover:bg-primary-600"
+      >
+        Refresh
+      </button>
+      <button
+        (click)="clearCache()"
+        class="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600"
+      >
+        Clear Cache
+      </button>
+    </div>
+  </div>
+
+  <!-- Group 3: Loading state -->
+  @if (loading$ | async) {
+    <div class="text-center py-12">
+      <p class="text-lg text-muted-color">Loading health facilities...</p>
+    </div>
+  }
+
+  <!-- Group 4: Results table -->
+  @if (!(loading$ | async)) {
+    <div class="overflow-x-auto rounded-lg border border-surface-200">
+      <table class="w-full">
+        <thead class="bg-surface-100 border-b border-surface-200">
+          <tr>
+            <th class="px-6 py-4 text-left text-sm font-semibold text-text-color">Name</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold text-text-color">Type</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold text-text-color">Province</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold text-text-color">Canton</th>
+            <th class="px-6 py-4 text-center text-sm font-semibold text-text-color">Slots</th>
+            <th class="px-6 py-4 text-center text-sm font-semibold text-text-color">Location</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (placesFiltered.length === 0) {
+            <tr>
+              <td colspan="6" class="px-6 py-8 text-center text-muted-color">
+                No health facilities found
+              </td>
+            </tr>
+          } @else {
+            @for (place of placesFiltered; track place.code) {
+              <tr class="border-b border-surface-200 hover:bg-surface-50">
+                <td class="px-6 py-4 text-sm text-text-color">{{ place.name }}</td>
+                <td class="px-6 py-4 text-sm">
+                  <span class="inline-block px-3 py-1 rounded-full text-white text-xs font-semibold" [style.backgroundColor]="getTypeColor(place.type)">
+                    {{ place.type }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-sm text-text-color">{{ place.province }}</td>
+                <td class="px-6 py-4 text-sm text-text-color">{{ place.canton }}</td>
+                <td class="px-6 py-4 text-sm text-center font-bold text-primary-600">{{ place.availableSlots }}</td>
+                <td class="px-6 py-4 text-sm text-center">
+                  @if (place.hasLocation) {
+                    <span class="text-green-600 font-semibold">✓ Located</span>
+                  } @else {
+                    <span class="text-yellow-600 font-semibold">⊘ No location</span>
+                  }
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Group 5: Results summary -->
+    <div class="mt-6 p-4 bg-surface-100 rounded-lg">
+      <p class="text-sm text-muted-color">
+        Showing <strong class="text-text-color">{{ placesFiltered.length }}</strong> of <strong class="text-text-color">{{ (places$ | async)?.length }}</strong> facilities
+      </p>
+    </div>
+  }
+</div>
