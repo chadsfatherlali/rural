@@ -44,4 +44,4 @@ __screenshots__/
 Thumbs.db
 
 # Environment files with sensitive data
-src/environments
+/src/environments
