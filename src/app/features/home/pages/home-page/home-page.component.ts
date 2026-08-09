@@ -9,6 +9,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDividerModule } from '@angular/material/divider';
 import { Observable, Subject } from 'rxjs';
 import { debounceTime, startWith, takeUntil, map } from 'rxjs/operators';
 import { MarkerClusterer, Cluster } from '@googlemaps/markerclusterer';
@@ -21,18 +22,7 @@ declare var google: any;
 @Component({
   selector: 'app-home-page',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatSelectModule,
-    MatOptionModule,
-    MatInputModule,
-    MatAutocompleteModule,
-    MatSidenavModule,
-    MatButtonModule,
-    MatIconModule
-  ],
+  imports: [CommonModule, ReactiveFormsModule, MatFormFieldModule, MatSelectModule, MatOptionModule, MatInputModule, MatAutocompleteModule, MatSidenavModule, MatButtonModule, MatIconModule, MatDividerModule],
   templateUrl: './home-page.component.html',
   styleUrl: './home-page.component.css'
 })
@@ -146,72 +136,125 @@ export class HomePageComponent implements OnInit, OnDestroy {
     const selectedSpecializations = this.specializationControl.value || [];
     const selectedProvinces = this.provinceControl.value || [];
 
-    // Group 3: Filter places by code and active filters
+    console.log(`🔎 Autocomplete filtering - Search: "${filterValue}" - Specializations: ${selectedSpecializations.length}, Provinces: ${selectedProvinces.length}`);
+
+    // Group 3: If either filter is empty, return empty (AND logic)
+    if (selectedSpecializations.length === 0 || selectedProvinces.length === 0) {
+      console.log(`🔎 No filters selected - returning empty autocomplete results`);
+      return [];
+    }
+
+    // Group 4: Filter places by code and both active filters (intersection)
     let results = this.allPlaces.filter(place => {
       
       // Check if place matches code search
       const codeMatch = filterValue === '' || place.code.toLowerCase().includes(filterValue);
       
-      // Check specialization filter
-      const specializationMatch = selectedSpecializations.length === 0 || 
-                                 selectedSpecializations.includes(place.specialization);
+      // Check specialization filter (must be in selection)
+      const specializationMatch = selectedSpecializations.includes(place.specialization);
       
-      // Check province filter
-      const provinceMatch = selectedProvinces.length === 0 || 
-                           selectedProvinces.includes(place.province);
+      // Check province filter (must be in selection)
+      const provinceMatch = selectedProvinces.includes(place.province);
       
       return codeMatch && specializationMatch && provinceMatch;
     });
 
+    console.log(`🔎 Autocomplete found ${results.length} matching places`);
     return results;
-  }
-
-  private filterPlacesBySpecialization(selectedSpecializations: string[]): void {
-
-    // Group 1: If no specializations selected, show all places with location
-    if (!selectedSpecializations || selectedSpecializations.length === 0) {
-      this.placesWithLocation = this.allPlaces.filter(p => p.hasLocation);
-      console.log(`📍 Showing all ${this.placesWithLocation.length} places`);
-    } else {
-
-      // Group 2: Filter places by selected specializations
-      this.placesWithLocation = this.allPlaces.filter(p => 
-        p.hasLocation && selectedSpecializations.includes(p.specialization)
-      );
-      console.log(`🔧 Filtered to ${this.placesWithLocation.length} places by specialization`);
-    }
-
-    // Group 3: Update markers visibility on map
-    this.updateMarkersDisplay();
   }
 
   private applyFilters(): void {
 
     // Group 1: Get filter values
-    const selectedSpecializations = this.specializationControl.value || [];
-    const selectedProvinces = this.provinceControl.value || [];
+    let selectedSpecializations = this.specializationControl.value || [];
+    let selectedProvinces = this.provinceControl.value || [];
 
-    console.log(`🔍 Applying filters - Specializations: ${selectedSpecializations.length}, Provinces: ${selectedProvinces.length}`);
+    console.log(`🔍 applyFilters() called - Specializations: ${selectedSpecializations.length}, Provinces: ${selectedProvinces.length}`);
 
-    // Group 2: Apply both filters
-    this.placesWithLocation = this.allPlaces.filter(p => {
-      const hasLocation = p.hasLocation;
-      
-      // Check specialization filter
-      const specializationMatch = selectedSpecializations.length === 0 || 
-                                 selectedSpecializations.includes(p.specialization);
-      
-      // Check province filter
-      const provinceMatch = selectedProvinces.length === 0 || 
-                           selectedProvinces.includes(p.province);
-      
-      return hasLocation && specializationMatch && provinceMatch;
+    // Group 2: Validate and update available options (bidirectional filtering)
+    const validatedProvinces = this.getValidProvinces(selectedSpecializations);
+    const validatedSpecializations = this.getValidSpecializations(selectedProvinces);
+
+    // Group 3: If selections changed after validation, update controls
+    const invalidProvinces = selectedProvinces.filter(p => !validatedProvinces.includes(p));
+    const invalidSpecializations = selectedSpecializations.filter(s => !validatedSpecializations.includes(s));
+
+    if (invalidProvinces.length > 0) {
+      selectedProvinces = selectedProvinces.filter(p => validatedProvinces.includes(p));
+      this.provinceControl.setValue(selectedProvinces, { emitEvent: false });
+      console.log(`⚠️ Removed provinces without selected specializations: ${invalidProvinces.join(', ')}`);
+    }
+
+    if (invalidSpecializations.length > 0) {
+      selectedSpecializations = selectedSpecializations.filter(s => validatedSpecializations.includes(s));
+      this.specializationControl.setValue(selectedSpecializations, { emitEvent: false });
+      console.log(`⚠️ Removed specializations without selected provinces: ${invalidSpecializations.join(', ')}`);
+    }
+
+    // Group 4: If EITHER filter is empty, show nothing (intersection/AND logic)
+    if (selectedSpecializations.length === 0 || selectedProvinces.length === 0) {
+      this.placesWithLocation = [];
+      console.log(`📊 Filter is empty - showing 0 places`);
+    } else {
+
+      // Group 5: Apply both filters (BOTH must have selections)
+      this.placesWithLocation = this.allPlaces.filter(p => {
+        const hasLocation = p.hasLocation;
+        
+        // Check specialization filter (must be in selection)
+        const specializationMatch = selectedSpecializations.includes(p.specialization);
+        
+        // Check province filter (must be in selection)
+        const provinceMatch = selectedProvinces.includes(p.province);
+        
+        return hasLocation && specializationMatch && provinceMatch;
+      });
+
+      console.log(`📊 Filtered to ${this.placesWithLocation.length} places`);
+    }
+
+    // Group 6: Update markers on map
+    this.updateMarkersDisplay();
+  }
+
+  private getValidProvinces(selectedSpecializations: string[]): string[] {
+
+    // Group 1: If no specializations selected, all provinces are valid
+    if (selectedSpecializations.length === 0) {
+      return this.provinceList;
+    }
+
+    // Group 2: Find provinces that have at least one place with ALL selected specializations
+    const validProvinces = new Set<string>();
+
+    this.allPlaces.forEach(place => {
+      // Check if this place's specialization is in the selected list
+      if (selectedSpecializations.includes(place.specialization)) {
+        validProvinces.add(place.province);
+      }
     });
 
-    console.log(`📊 Filtered to ${this.placesWithLocation.length} places`);
+    return Array.from(validProvinces).sort();
+  }
 
-    // Group 3: Update markers on map
-    this.updateMarkersDisplay();
+  private getValidSpecializations(selectedProvinces: string[]): string[] {
+
+    // Group 1: If no provinces selected, all specializations are valid
+    if (selectedProvinces.length === 0) {
+      return this.specializationList;
+    }
+
+    // Group 2: Find specializations that have at least one place in the selected provinces
+    const validSpecializations = new Set<string>();
+
+    this.allPlaces.forEach(place => {
+      // Check if this place's province is in the selected list
+      if (selectedProvinces.includes(place.province)) {
+        validSpecializations.add(place.specialization);
+      }
+    });
+
+    return Array.from(validSpecializations).sort();
   }
 
   private updateMarkersDisplay(): void {
@@ -224,7 +267,25 @@ export class HomePageComponent implements OnInit, OnDestroy {
 
     console.log(`👁️ Updating markers. Specializations: ${selectedSpecializations.length}, Provinces: ${selectedProvinces.length}`);
 
-    // Group 2: Filter markers to show based on BOTH filters
+    // Group 2: If no provinces or no specializations are selected, show no markers
+    if (selectedProvinces.length === 0 || selectedSpecializations.length === 0) {
+      if (this.markerClusterer) {
+        this.markerClusterer.clearMarkers();
+      }
+      this.markerClusterer = new MarkerClusterer({
+        map: this.map,
+        markers: [],
+        renderer: {
+          render: (cluster: Cluster) => {
+            return this.createClusterMarker(cluster);
+          }
+        }
+      });
+      console.log(`🔄 No filters selected - markers cleared`);
+      return;
+    }
+
+    // Group 3: Filter markers to show based on BOTH filters (AND logic)
     const visibleMarkers: any[] = [];
 
     this.allMarkers.forEach(marker => {
@@ -237,15 +298,13 @@ export class HomePageComponent implements OnInit, OnDestroy {
         if (placeData) {
           const place = placeData.place;
 
-          // Check specialization filter
-          const specializationMatch = selectedSpecializations.length === 0 || 
-                                     selectedSpecializations.includes(place.specialization);
+          // Check if place's specialization is in the selected specializations
+          const specializationMatch = selectedSpecializations.includes(place.specialization);
           
-          // Check province filter
-          const provinceMatch = selectedProvinces.length === 0 || 
-                               selectedProvinces.includes(place.province);
+          // Check if place's province is in the selected provinces
+          const provinceMatch = selectedProvinces.includes(place.province);
           
-          // Show marker only if BOTH filters match
+          // Show marker only if BOTH specialization AND province match
           const shouldShow = specializationMatch && provinceMatch;
           
           if (shouldShow) {
@@ -255,7 +314,7 @@ export class HomePageComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Group 3: Recreate MarkerClusterer with only visible markers
+    // Group 4: Recreate MarkerClusterer with only visible markers
     if (this.markerClusterer) {
       this.markerClusterer.clearMarkers();
     }
@@ -653,5 +712,15 @@ export class HomePageComponent implements OnInit, OnDestroy {
     }
 
     console.log(`📱 Screen size: ${width}px - Mode: ${this.sidenavMode}, Open: ${this.sidenavOpen}`);
+  }
+
+  onSpecializationChange(): void {
+    console.log('Specialization changed');
+    this.applyFilters();
+  }
+
+  onProvinceChange(): void {
+    console.log('Province changed');
+    this.applyFilters();
   }
 }

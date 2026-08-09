@@ -44,7 +44,7 @@
         <div class="filter-group">
           <mat-form-field class="full-width">
             <mat-label>Filtrar por Carrera</mat-label>
-            <mat-select [formControl]="specializationControl" multiple>
+            <mat-select [formControl]="specializationControl" multiple (change)="onSpecializationChange()">
               @for (specialization of specializationList; track specialization) {
                 <mat-option [value]="specialization">{{ specialization }}</mat-option>
               }
@@ -56,7 +56,7 @@
         <div class="filter-group">
           <mat-form-field class="full-width">
             <mat-label>Filtrar por Provincia</mat-label>
-            <mat-select [formControl]="provinceControl" multiple>
+            <mat-select [formControl]="provinceControl" multiple (change)="onProvinceChange()">
               @for (province of provinceList; track province) {
                 <mat-option [value]="province">{{ province }}</mat-option>
               }
