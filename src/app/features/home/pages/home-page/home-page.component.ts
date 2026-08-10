@@ -128,7 +128,6 @@ export class HomePageComponent implements OnInit, OnDestroy {
 
   // Group 3: Autocomplete filtering
   private _filterPlacesByCode(value: string): Place[] {
-
     // Group 1: Normalize filter value
     const filterValue = value.toLowerCase().trim();
 
@@ -141,6 +140,7 @@ export class HomePageComponent implements OnInit, OnDestroy {
     // Group 3: If either filter is empty, return empty (AND logic)
     if (selectedSpecializations.length === 0 || selectedProvinces.length === 0) {
       console.log(`🔎 No filters selected - returning empty autocomplete results`);
+
       return [];
     }
 
@@ -160,11 +160,11 @@ export class HomePageComponent implements OnInit, OnDestroy {
     });
 
     console.log(`🔎 Autocomplete found ${results.length} matching places`);
+
     return results;
   }
 
   private applyFilters(): void {
-
     // Group 1: Get filter values
     let selectedSpecializations = this.specializationControl.value || [];
     let selectedProvinces = this.provinceControl.value || [];
@@ -335,14 +335,14 @@ export class HomePageComponent implements OnInit, OnDestroy {
 
   // Group 4: Handle place selection
   onPlaceSelected(place: Place): void {
-
     if (!place.hasLocation) {
       console.warn('Place does not have location data:', place);
+
       return;
     }
 
     // Group 1: Center map on selected place
-    this.centerMap(place.latitude, place.longitude, 20);
+    this.centerMap(place.latitude, place.longitude, 19);
 
     // Group 2: Show marker info
     this.showMarkerInfo(place);
@@ -472,7 +472,7 @@ export class HomePageComponent implements OnInit, OnDestroy {
         if (placeId) {
           const placeData = this.markersMap.get(placeId);
           if (placeData) {
-            this.centerMap(placeData.place.latitude, placeData.place.longitude, 20);
+            this.centerMap(placeData.place.latitude, placeData.place.longitude, 18);
             this.showMarkerInfo(placeData.place);
           }
         }
@@ -532,7 +532,6 @@ export class HomePageComponent implements OnInit, OnDestroy {
   }
 
   private showMarkerInfo(place: Place): void {
-
     if (!this.map) return;
 
     // Group 1: Get marker from map
@@ -541,26 +540,64 @@ export class HomePageComponent implements OnInit, OnDestroy {
 
     const marker = markerData.marker;
 
-    // Group 2: Create info window with place details
-    const infoWindow = new google.maps.InfoWindow({
-      content: this.createInfoWindowContent(place)
-    });
+    // Group 2: Check if Street View panorama is available at this location
+    this.checkStreetViewAvailability(place.latitude, place.longitude).then(hasStreetView => {
+      
+      // Group 3: Create info window with place details
+      const infoWindow = new google.maps.InfoWindow({
+        content: this.createInfoWindowContent(place, hasStreetView)
+      });
 
-    // Group 3: Open info window
-    infoWindow.open(this.map, marker);
+      // Group 4: Open info window
+      infoWindow.open(this.map, marker);
 
-    // Group 4: Add event listener to button after info window opens
-    setTimeout(() => {
-      const button = document.getElementById(`streetview-btn-${place.id}`);
-      if (button) {
-        button.addEventListener('click', () => {
-          this.viewPlaceStreetView(place.latitude, place.longitude);
-        });
+      // Group 5: Add event listener to Street View button if available
+      if (hasStreetView) {
+        setTimeout(() => {
+          const button = document.getElementById(`streetview-btn-${place.id}`);
+          if (button) {
+            button.addEventListener('click', () => {
+              this.viewPlaceStreetView(place.latitude, place.longitude);
+            });
+          }
+        }, 100);
       }
-    }, 100);
+    });
   }
 
-  private createInfoWindowContent(place: Place): string {
+  private checkStreetViewAvailability(lat: number, lng: number): Promise<boolean> {
+
+    return new Promise((resolve) => {
+
+      // Group 1: Wait for Google Maps StreetViewService to be available
+      this.waitForGoogleMaps().then(() => {
+        const streetViewService = new google.maps.StreetViewService();
+        
+        // Group 2: Request Street View data at the specified location
+        streetViewService.getPanorama(
+          { location: { lat, lng }, radius: 50 },
+          (data: any, status: any) => {
+            
+            // Group 3: Check if Street View is available
+            if (status === google.maps.StreetViewStatus.OK) {
+              console.log(`✅ Street View available at ${lat}, ${lng}`);
+              resolve(true);
+            } else {
+              console.log(`❌ Street View not available at ${lat}, ${lng} - Status: ${status}`);
+              resolve(false);
+            }
+          }
+        );
+      }).catch(() => {
+        console.error('❌ Google Maps not loaded');
+        resolve(false);
+      });
+    });
+  }
+
+  private createInfoWindowContent(place: Place, hasStreetView: boolean = false): string {
+    const googleMapsUrl = `https://www.google.com/maps?q=${place.latitude},${place.longitude}`;
+    
     return `
       <div style="padding: 12px; font-family: Arial, sans-serif; width: 300px;">
         <h3 style="margin: 0 0 12px 0; font-weight: 600; color: #333; font-size: 0.95rem;">
@@ -594,21 +631,41 @@ export class HomePageComponent implements OnInit, OnDestroy {
           </div>
         </div>
         
-        <div style="border-top: 1px solid #e0e0e0; padding-top: 8px; margin-top: 8px;">
-          <button id="streetview-btn-${place.id}" style="
+        <div style="border-top: 1px solid #e0e0e0; padding-top: 8px; margin-top: 8px; display: flex; flex-direction: column; gap: 8px;">
+          ${hasStreetView ? `
+            <button id="streetview-btn-${place.id}" style="
+              width: 100%;
+              padding: 8px 12px;
+              background: #ef4444;
+              color: white;
+              border: none;
+              border-radius: 4px;
+              font-size: 0.85rem;
+              font-weight: 600;
+              cursor: pointer;
+              transition: background 0.2s ease;
+            " onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+              Ver Lugar en Street View
+            </button>
+          ` : ''}
+          
+          <a href="${googleMapsUrl}" target="_blank" rel="noopener noreferrer" style="
             width: 100%;
             padding: 8px 12px;
-            background: #ef4444;
+            background: #3b82f6;
             color: white;
             border: none;
             border-radius: 4px;
             font-size: 0.85rem;
             font-weight: 600;
             cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            display: block;
             transition: background 0.2s ease;
-          " onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
-            Ver Lugar en Street View
-          </button>
+          " onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
+            Ver en Google Maps
+          </a>
         </div>
         
         <div style="border-top: 1px solid #e0e0e0; padding-top: 8px; margin-top: 8px; font-size: 0.8rem; color: #999;">
@@ -619,7 +676,6 @@ export class HomePageComponent implements OnInit, OnDestroy {
   }
 
   centerMap(lat: number, lng: number, zoom: number = 12): void {
-
     if (!this.map) return;
 
     this.map.setCenter({ lat, lng });
@@ -676,6 +732,7 @@ export class HomePageComponent implements OnInit, OnDestroy {
         console.log('✅ Street View initialized successfully');
       } catch (error) {
         console.error('Error initializing Street View:', error);
+        
         this.streetViewActive = false;
       }
     }, 500);
